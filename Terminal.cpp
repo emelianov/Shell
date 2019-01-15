@@ -285,7 +285,9 @@ void Terminal::flush()
  */
 size_t Terminal::write(uint8_t c)
 {
-    return _stream ? _stream->write(c) : 0;
+    if (!_stream) return 0;
+    if (c == '\n' && (Terminal::Mode)mod == Telnet) _stream->write('\r');
+    return _stream->write(c);
 }
 
 /**
@@ -298,7 +300,9 @@ size_t Terminal::write(uint8_t c)
  */
 size_t Terminal::write(const uint8_t *buffer, size_t size)
 {
-    return _stream ? _stream->write(buffer, size) : 0;
+    //return _stream ? _stream->write(buffer, size) : 0;
+    for (uint16_t i = 0; i < size; i++) write(buffer[i]);
+    return size;
 }
 
 /**
@@ -322,13 +326,13 @@ void Terminal::writeProgMem(const char *str)
     while ((ch = pgm_read_byte((const uint8_t *)str)) != 0) {
         buffer[posn++] = ch;
         if (posn == sizeof(buffer)) {
-            _stream->write(buffer, posn);
+            write(buffer, posn);
             posn = 0;
         }
         ++str;
     }
     if (posn != 0)
-        _stream->write(buffer, posn);
+        write(buffer, posn);
 }
 
 /**
