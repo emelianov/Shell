@@ -392,7 +392,7 @@ void Shell::loop()
     }
 }
 
-#if defined(__AVR__)
+#if defined(__AVR__) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
 
 // String compare of two strings in program memory.
 static int progmem_strcmp(const char *str1, const char *str2)
@@ -427,8 +427,11 @@ static int progmem_strcmp(const char *str1, const char *str2)
 static const char *readInfoName(const ShellCommandInfo *info)
 {
 #if defined(__AVR__)
-    return (const char *)pgm_read_word
-        (((const uint8_t *)info) + offsetof(ShellCommandInfo, name));
+    	return (const char *)pgm_read_word
+        	(((const uint8_t *)info) + offsetof(ShellCommandInfo, name));
+#elif defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
+    	return (const char *)pgm_read_dword
+        	(((const uint8_t *)info) + offsetof(ShellCommandInfo, name));
 #else
     return info->name;
 #endif
@@ -439,6 +442,9 @@ static const char *readInfoHelp(const ShellCommandInfo *info)
 {
 #if defined(__AVR__)
     return (const char *)pgm_read_word
+        (((const uint8_t *)info) + offsetof(ShellCommandInfo, help));
+#elif defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
+    return (const char *)pgm_read_dword
         (((const uint8_t *)info) + offsetof(ShellCommandInfo, help));
 #else
     return info->help;
@@ -456,6 +462,9 @@ static ShellCommandFunc readInfoFunc(const ShellCommandInfo *info)
         return (ShellCommandFunc)pgm_read_dword
             (((const uint8_t *)info) + offsetof(ShellCommandInfo, func));
     }
+#elif defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
+    return (ShellCommandFunc)pgm_read_dword
+        (((const uint8_t *)info) + offsetof(ShellCommandInfo, func));
 #else
     return info->func;
 #endif

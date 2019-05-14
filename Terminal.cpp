@@ -187,6 +187,7 @@ void Terminal::begin(Stream &stream, Mode mode)
     state = STATE_INIT;
     flags = 0;
     mod = mode;
+	_stream->setTimeout(50);
 }
 
 /**
