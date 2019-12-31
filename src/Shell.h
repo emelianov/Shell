@@ -26,11 +26,13 @@
 #include "Terminal.h"
 #include <Client.h>
 
+#define SHELL_TIMEOUT 60000
+
 class Shell;
 class ShellArguments;
 class LoginShell;
 
-#if defined(__arm__)
+#if defined(__arm__) || defined(ESP32) || defined(ESP8266)
 #define SHELL_MAX_CMD_LEN   256
 #else
 #define SHELL_MAX_CMD_LEN   64
@@ -69,7 +71,7 @@ public:
     bool begin(Client &client, size_t maxHistory = 0, Terminal::Mode mode = Telnet);
     void end();
 
-    void loop();
+    bool loop();
 
     static void registerCommand(ShellCommandRegister *cmd);
 
@@ -104,6 +106,7 @@ private:
     uint8_t lineMode;
     int uid;
     unsigned long timer;
+    uint32_t lastActivity;
 
     // Disable copy constructor and operator=().
     Shell(const Shell &other) {}

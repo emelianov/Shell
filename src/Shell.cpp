@@ -210,6 +210,7 @@ bool Shell::begin(Client &client, size_t maxHistory, Terminal::Mode mode)
     if (!beginShell(client, maxHistory, mode))
         return false;
     isClient = true;
+    lastActivity = millis();
     return true;
 }
 
@@ -291,12 +292,12 @@ static char const builtin_cmd_help_alt[] PROGMEM = "?";
  * This function must be called regularly from the application's main loop
  * to process input for the shell.
  */
-void Shell::loop()
+bool Shell::loop()
 {
     // If the stream is a TCP client, then check for disconnection.
     if (isClient && !((Client *)stream())->connected()) {
         end();
-        return;
+        return false;
     }
 
     // If the login delay is active, then suppress all input.
@@ -306,7 +307,7 @@ void Shell::loop()
             timer = 0;
         } else {
             readKey();
-            return;
+            return true;
         }
     }
 
@@ -319,9 +320,14 @@ void Shell::loop()
     // system from becoming starved of time resources if the bytes are
     // arriving rapidly from the underyling stream.
     int key = readKey();
-    if (key == -1)
-        return;
-
+    if (key == -1) {
+//        if (millis() - lastActivity > SHELL_TIMEOUT) { 
+//            end();
+//            return false;
+//        }
+        return true;
+    }
+    lastActivity = millis();
     // Process the key.
     switch (key) {
     case KEY_BACKSPACE:
@@ -390,9 +396,10 @@ void Shell::loop()
         }
         break;
     }
+    return true;
 }
 
-#if defined(__AVR__) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
+#if defined(__AVR__) || defined(ESP32) || defined(ESP8266)
 
 // String compare of two strings in program memory.
 static int progmem_strcmp(const char *str1, const char *str2)
@@ -429,7 +436,7 @@ static const char *readInfoName(const ShellCommandInfo *info)
 #if defined(__AVR__)
     	return (const char *)pgm_read_word
         	(((const uint8_t *)info) + offsetof(ShellCommandInfo, name));
-#elif defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
+#elif defined(ESP32) || defined(ESP8266)
     	return (const char *)pgm_read_dword
         	(((const uint8_t *)info) + offsetof(ShellCommandInfo, name));
 #else
@@ -443,7 +450,7 @@ static const char *readInfoHelp(const ShellCommandInfo *info)
 #if defined(__AVR__)
     return (const char *)pgm_read_word
         (((const uint8_t *)info) + offsetof(ShellCommandInfo, help));
-#elif defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
+#elif defined(ESP32) || defined(ESP8266)
     return (const char *)pgm_read_dword
         (((const uint8_t *)info) + offsetof(ShellCommandInfo, help));
 #else
@@ -462,7 +469,7 @@ static ShellCommandFunc readInfoFunc(const ShellCommandInfo *info)
         return (ShellCommandFunc)pgm_read_dword
             (((const uint8_t *)info) + offsetof(ShellCommandInfo, func));
     }
-#elif defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_ESP8266)
+#elif defined(ESP32) || defined(ESP8266)
     return (ShellCommandFunc)pgm_read_dword
         (((const uint8_t *)info) + offsetof(ShellCommandInfo, func));
 #else
