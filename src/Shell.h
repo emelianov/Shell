@@ -82,6 +82,9 @@ public:
     void help();
     void exit();
 
+    bool execute(const ShellArguments &argv);
+    bool execute2(const ShellArguments &argv);
+
 protected:
     virtual void beginSession();
     virtual void printPrompt();
@@ -107,7 +110,6 @@ private:
     Shell &operator=(const Shell &) { return *this; }
 
     bool beginShell(Stream &stream, size_t maxHistory, Terminal::Mode mode);
-    bool execute(const ShellArguments &argv);
     void executeBuiltin(const char *cmd);
     void clearCharacters(size_t len);
     void changeHistory(bool up);
@@ -119,11 +121,10 @@ private:
 class ShellArguments
 {
     friend class Shell;
-private:
+    //friend class LoginShell;
+public:
     ShellArguments(char *buffer, size_t len);
     ~ShellArguments() {}
-public:
-
     int count() const { return argc; }
     const char *operator[](int index) const;
 

@@ -286,6 +286,13 @@ void Terminal::flush()
  */
 size_t Terminal::write(uint8_t c)
 {
+    if (buffer) {
+        if (bufferPos >= bufferSize)
+            return 0;
+        buffer[bufferPos] = c;
+        bufferPos++;
+        return 1;
+    }
     if (!_stream) return 0;
     if (c == '\n' && (Terminal::Mode)mod == Telnet) _stream->write('\r');
     return _stream->write(c);

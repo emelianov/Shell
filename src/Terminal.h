@@ -126,8 +126,20 @@ public:
 
     static size_t utf8Length(long code);
     static size_t utf8Format(uint8_t *buffer, long code);
+public:
+    void setOutput(char* b = nullptr, size_t s = 0) {
+        buffer = b;
+        bufferSize = s;
+        bufferPos = 0;
+    }
+    char* getOutput() {
+        return buffer;
+    }
 
 private:
+    char* buffer = nullptr;
+    uint16_t bufferSize = 0;
+    uint16_t bufferPos = 0;
     Stream *_stream;
     long ucode;
     int ncols, nrows;

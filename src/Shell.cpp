@@ -700,6 +700,9 @@ void Shell::execute()
  *
  * \return Returns true if the command was found; false if not found.
  */
+bool Shell::execute2(const ShellArguments &argv) {
+    return execute(argv);
+}
 bool Shell::execute(const ShellArguments &argv)
 {
     const char *argv0 = argv[0];
@@ -880,14 +883,18 @@ ShellArguments::ShellArguments(char *buffer, size_t len)
         do {
             ch = buffer[posn];
             if (ch == '"' || ch == '\'') {
-                if (quote == ch) {
-                    quote = 0;
-                    ++posn;
-                    continue;
-                } else if (!quote) {
-                    quote = ch;
-                    ++posn;
-                    continue;
+                if (!posn || buffer[posn - 1] != '\\') {
+                    if (quote == ch) {
+                        quote = 0;
+                        ++posn;
+                        continue;
+                    } else if (!quote) {
+                        quote = ch;
+                        ++posn;
+                        continue;
+                    }
+                } else {
+                    outposn--;
                 }
             } else if (!quote && ch == ' ') {
                 break;
